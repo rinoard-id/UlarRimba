@@ -1,0 +1,14 @@
+{
+  "name": "ular-tangga-rimba",
+  "version": "1.0.0",
+  "description": "Full-stack web game Papan Ular Tangga Rimba & Kartu Takdir",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "sqlite3": "^5.1.7"
+  }
+}

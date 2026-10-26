@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ular Tangga Rimba & Kartu Takdir</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- SCREEN 1: LOGIN & PROFILE -->
+        <section id="screen-login" class="screen active">
+            <div class="card jungle-box">
+                <h1>🦁 ULAR TANGGA RIMBA 🌴</h1>
+                <p>Jelajahi Rimba, Hindari Hewan Ganas, & Taklukkan Kartu Takdir!</p>
+                
+                <div class="form-group">
+                    <label>Nama Petualang:</label>
+                    <input type="text" id="input-username" placeholder="Masukkan nama..." maxlength="15" value="Pemberani_1">
+                </div>
+
+                <div class="form-group">
+                    <label>Pilih Avatar Karakter:</label>
+                    <div class="avatar-grid" id="avatar-selector">
+                        <div class="avatar-option selected" data-id="1">🦁<br>Singa</div>
+                        <div class="avatar-option" data-id="2">🐯<br>Harimau</div>
+                        <div class="avatar-option" data-id="3">🦅<br>Elang</div>
+                        <div class="avatar-option" data-id="4">🐘<br>Gajah</div>
+                        <div class="avatar-option" data-id="5">🐺<br>Serigala</div>
+                        <div class="avatar-option" data-id="6">🦊<br>Rubah</div>
+                        <div class="avatar-option" data-id="7">🐼<br>Panda</div>
+                        <div class="avatar-option" data-id="8">🐲<br>Naga</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="btn-login">Mulai Petualangan</button>
+                <button class="btn btn-secondary" id="btn-show-leaderboard">🏆 Papan Peringkat MMR</button>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: MAIN MENU / MODE SELECTOR -->
+        <section id="screen-menu" class="screen">
+            <div class="card jungle-box">
+                <h2>Selamat Datang, <span id="display-username">Pemberani</span>!</h2>
+                <div class="profile-badge">
+                    <span>Rank: <strong id="display-rank">Beginner</strong></span>
+                    <span>MMR: <strong id="display-mmr">100</strong></span>
+                </div>
+
+                <div class="menu-buttons">
+                    <button class="btn btn-mode" data-mode="solo">⚔️ Solo Play (vs BOT AI)</button>
+                    <button class="btn btn-mode" data-mode="local">👥 1-Device Local Co-op</button>
+                    <button class="btn btn-mode" data-mode="online">🌐 Room Multiplayer Online</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: ONLINE ROOM LOBBY -->
+        <section id="screen-room" class="screen">
+            <div class="card jungle-box">
+                <h2>Lobby Multiplayer</h2>
+                <div class="room-actions">
+                    <button class="btn btn-primary" id="btn-create-room">Buat Room Baru</button>
+                    <div class="join-box">
+                        <input type="text" id="input-room-code" placeholder="Kode 4 Digit" maxlength="4">
+                        <button class="btn btn-secondary" id="btn-join-room">Gabung Room</button>
+                    </div>
+                </div>
+                <div id="room-waiting-area" style="display:none;">
+                    <h3>Kode Room: <span id="span-room-code" class="highlight">----</span></h3>
+                    <div id="room-players-list" class="players-list"></div>
+                    <button class="btn btn-primary" id="btn-start-online-game" style="display:none;">Mulai Permainan</button>
+                </div>
+                <button class="btn btn-back" id="btn-back-menu">← Kembali</button>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: GAME ARENA -->
+        <section id="screen-game" class="screen">
+            <div class="game-container">
+                <div class="game-sidebar">
+                    <div class="jungle-box panel">
+                        <h3>Status Rimba</h3>
+                        <div id="game-status-text" class="status-msg">Giliran Pemain 1</div>
+                        <div id="players-score-board"></div>
+                        
+                        <div class="dice-box">
+                            <div id="dice-display" class="dice">🎲 <span>-</span></div>
+                            <button class="btn btn-primary" id="btn-roll-dice">LEMPAR DADU</button>
+                        </div>
+
+                        <button class="btn btn-back" id="btn-quit-game" style="margin-top: 15px;">Menyerah / Keluar</button>
+                    </div>
+                </div>
+
+                <div class="game-board-area">
+                    <canvas id="boardCanvas" width="600" height="600"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODAL: FATE CARD -->
+        <div id="modal-card" class="modal">
+            <div class="modal-content jungle-box" id="card-modal-box">
+                <h3 id="card-modal-title">KARTU TAKDIR</h3>
+                <div id="card-modal-icon" class="card-icon">📜</div>
+                <p id="card-modal-text">Deskripsi Kartu Takdir...</p>
+                <button class="btn btn-primary" id="btn-close-card">Lanjutkan</button>
+            </div>
+        </div>
+
+        <!-- MODAL: LEADERBOARD -->
+        <div id="modal-leaderboard" class="modal">
+            <div class="modal-content jungle-box">
+                <h3>🏆 Papan Peringkat MMR Rimba</h3>
+                <div id="leaderboard-list">Memuat...</div>
+                <button class="btn btn-secondary" id="btn-close-leaderboard">Tutup</button>
+            </div>
+        </div>
+
+        <!-- MODAL: GAME OVER / WINNER -->
+        <div id="modal-gameover" class="modal">
+            <div class="modal-content jungle-box">
+                <h2 id="gameover-title">🎉 PERMAINAN SELESAI 🎉</h2>
+                <p id="gameover-msg">Pemenang adalah ...</p>
+                <button class="btn btn-primary" id="btn-back-to-menu">Kembali ke Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
