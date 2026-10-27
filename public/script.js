@@ -88,6 +88,8 @@ document.querySelectorAll('.btn-mode').forEach(btn => {
         gameMode = btn.getAttribute('data-mode');
         if (gameMode === 'online') {
             switchScreen('room');
+        } else if (gameMode === 'local') {
+            openLocalSetupModal();
         } else {
             startLocalOrSoloGame(gameMode);
         }
@@ -95,6 +97,69 @@ document.querySelectorAll('.btn-mode').forEach(btn => {
 });
 
 document.getElementById('btn-back-menu').addEventListener('click', () => switchScreen('menu'));
+document.getElementById('btn-menu-back-login').addEventListener('click', () => switchScreen('login'));
+
+// Local Co-op Setup Modal Handlers
+function openLocalSetupModal() {
+    let modal = document.getElementById('modal-local-setup');
+    modal.style.display = 'flex';
+    renderLocalPlayerInputs(2);
+}
+
+document.getElementById('select-player-count').addEventListener('change', (e) => {
+    renderLocalPlayerInputs(parseInt(e.target.value));
+});
+
+function renderLocalPlayerInputs(count) {
+    let container = document.getElementById('local-players-inputs');
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        let defaultName = i === 0 ? currentUser.username : `Pemberani ${i+1}`;
+        let defaultAvatar = (i % 8) + 1;
+        html += `<div style="margin-bottom: 8px;">
+            <label style="font-size:12px; font-weight:600;">Pemain ${i+1} Nama & Avatar:</label>
+            <div style="display: flex; gap: 6px;">
+                <input type="text" id="local-name-${i}" value="${defaultName}" style="flex-grow: 1; padding: 6px 10px; font-size:13px; border-radius:8px;" maxlength="12">
+                <select id="local-avatar-${i}" style="padding: 6px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); background:#fff;">
+                    <option value="1" ${defaultAvatar===1?'selected':''}>🦁 Singa</option>
+                    <option value="2" ${defaultAvatar===2?'selected':''}>🐯 Harimau</option>
+                    <option value="3" ${defaultAvatar===3?'selected':''}>🦅 Elang</option>
+                    <option value="4" ${defaultAvatar===4?'selected':''}>🐘 Gajah</option>
+                    <option value="5" ${defaultAvatar===5?'selected':''}>🐺 Serigala</option>
+                    <option value="6" ${defaultAvatar===6?'selected':''}>🦊 Rubah</option>
+                    <option value="7" ${defaultAvatar===7?'selected':''}>🐼 Panda</option>
+                    <option value="8" ${defaultAvatar===8?'selected':''}>🐲 Naga</option>
+                </select>
+            </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+}
+
+document.getElementById('btn-close-local-setup').addEventListener('click', () => {
+    document.getElementById('modal-local-setup').style.display = 'none';
+});
+
+document.getElementById('btn-start-local-game').addEventListener('click', () => {
+    let count = parseInt(document.getElementById('select-player-count').value);
+    let players = [];
+    for (let i = 0; i < count; i++) {
+        let name = document.getElementById(`local-name-${i}`).value.trim() || `Pemberani ${i+1}`;
+        let av = parseInt(document.getElementById(`local-avatar-${i}`).value);
+        players.push({
+            id: `p${i+1}`,
+            username: name,
+            avatar: av,
+            pos: 1,
+            targetPos: 1,
+            isBot: false,
+            skipTurn: false,
+            shield: false
+        });
+    }
+    document.getElementById('modal-local-setup').style.display = 'none';
+    startLocalGameWithPlayers(players);
+});
 
 // Online Room Handlers
 document.getElementById('btn-create-room').addEventListener('click', () => {
@@ -157,15 +222,9 @@ socket.on('game_started', (room) => {
 socket.on('room_error', (msg) => alert(msg));
 
 // --- LOCAL / SOLO GAME LOGIC ---
-function startLocalOrSoloGame(mode) {
-    let players = [
-        { id: 'p1', username: currentUser.username, avatar: currentUser.avatar_id, pos: 1, targetPos: 1, isBot: false, skipTurn: false, shield: false }
-    ];
-
-    if (mode === 'solo') {
-        players.push({ id: 'bot1', username: 'BOT iOS', avatar: 2, pos: 1, targetPos: 1, isBot: true, skipTurn: false, shield: false });
-    } else if (mode === 'local') {
-        players.push({ id: 'p2', username: 'Pemberani 2', avatar: 3, pos: 1, targetPos: 1, isBot: false, skipTurn: false, shield: false });
+function startLocalGameWithPlayers(players) {
+    if (localGame && localGame.timerInterval) {
+        clearInterval(localGame.timerInterval);
     }
 
     localGame = {
@@ -174,11 +233,35 @@ function startLocalOrSoloGame(mode) {
         board: generateLocalBoard(),
         turnIndex: 0,
         status: 'playing',
-        lastDice: 3
+        lastDice: 3,
+        isProcessingTurn: false,
+        startTime: Date.now()
     };
 
+    localGame.timerInterval = setInterval(() => {
+        if (localGame && localGame.status === 'playing') {
+            let elapsedSec = Math.floor((Date.now() - localGame.startTime) / 1000);
+            let mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+            let secs = String(elapsedSec % 60).padStart(2, '0');
+            let timerEl = document.getElementById('game-timer');
+            if (timerEl) timerEl.innerText = `⏱️ ${mins}:${secs}`;
+        }
+    }, 1000);
+
     switchScreen('game');
+    updateScoreboard(localGame);
     renderGame(localGame);
+}
+
+function startLocalOrSoloGame(mode) {
+    let players = [
+        { id: 'p1', username: currentUser.username, avatar: currentUser.avatar_id, pos: 1, targetPos: 1, isBot: false, skipTurn: false, shield: false }
+    ];
+
+    if (mode === 'solo') {
+        players.push({ id: 'bot1', username: 'BOT', avatar: 2, pos: 1, targetPos: 1, isBot: true, skipTurn: false, shield: false });
+    }
+    startLocalGameWithPlayers(players);
 }
 
 function generateLocalBoard() {
@@ -350,68 +433,237 @@ const RED_CARDS = [
     { id: 30, text: "Lempar Mundur 8", type: 'red', action: (player) => { player.pos = Math.max(1, player.pos - 8); } }
 ];
 
-function playLocalTurn() {
-    if (localGame.status !== 'playing') return;
-    let currPlayer = localGame.players[localGame.turnIndex];
-
-    if (currPlayer.skipTurn) {
-        currPlayer.skipTurn = false;
-        document.getElementById('game-status-text').innerText = `${currPlayer.username} diskip turn-nya!`;
-        localGame.turnIndex = (localGame.turnIndex + 1) % localGame.players.length;
-        renderGame(localGame);
-        checkBotTurn();
-        return;
-    }
-
-    let dice = Math.floor(Math.random() * 6) + 1;
-    localGame.lastDice = dice;
-    document.getElementById('dice-display').querySelector('span').innerText = dice;
-
-    let targetPos = currPlayer.pos + dice;
-    if (targetPos > 100) {
-        let excess = targetPos - 100;
-        targetPos = 100 - excess;
-    }
-    
-    // Smooth animated token movement with jump arc
-    animateTokenMovement(currPlayer, targetPos, () => {
-        let snakeHit = localGame.board.snakes.find(s => s.from === currPlayer.pos);
-        let ladderHit = localGame.board.ladders.find(l => l.from === currPlayer.pos);
-        let cardHit = localGame.board.cardTiles.includes(currPlayer.pos);
-
-        let msg = `${currPlayer.username} melempar dadu [${dice}] -> Petak ${targetPos}`;
-
-        if (snakeHit) {
-            animateTokenMovement(currPlayer, snakeHit.to, () => {
-                msg += ` | 🐍 Kena Ular! Meluncur turun ke ${snakeHit.to}`;
-                finishTurnCheck(currPlayer, msg);
-            });
-        } else if (ladderHit) {
-            animateTokenMovement(currPlayer, ladderHit.to, () => {
-                msg += ` | 🐒 Menemukan Tangga Menari! Naik ke ${ladderHit.to}`;
-                finishTurnCheck(currPlayer, msg);
-            });
-        } else if (cardHit) {
-            // Random 50:50 Green or Red Card
-            let isGreen = Math.random() < 0.5;
-            let deck = isGreen ? GREEN_CARDS : RED_CARDS;
-            let card = deck[Math.floor(Math.random() * deck.length)];
-            
-            msg += ` | 📜 Kartu Takdir [${isGreen ? 'HIJAU (+)' : 'MERAH (-)'}]: ${card.text}`;
-            
-            showCardModal(isGreen ? "✨ Kartu Takdir Hijau (Positif)" : "⚡ Kartu Takdir Merah (Negatif)", card.text, () => {
-                card.action(currPlayer, dice, localGame);
-                // Ensure valid bounds 1-100
-                currPlayer.pos = Math.max(1, Math.min(100, currPlayer.pos));
-                
-                animateTokenMovement(currPlayer, currPlayer.pos, () => {
-                    finishTurnCheck(currPlayer, msg);
-                });
-            });
-        } else {
-            finishTurnCheck(currPlayer, msg);
+// Web Audio API Sound Effects Manager
+const AudioFX = {
+    ctx: null,
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                this.ctx = new AudioContext();
+            }
         }
-    });
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    },
+    playDice() {
+        try {
+            this.init();
+            if (!this.ctx) return;
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(() => {});
+            }
+            let now = this.ctx.currentTime;
+            for (let i = 0; i < 5; i++) {
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150 + Math.random() * 300, now + i * 0.06);
+                gain.gain.setValueAtTime(0.15, now + i * 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.06 + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + i * 0.06);
+                osc.stop(now + i * 0.06 + 0.05);
+            }
+        } catch (e) {
+            // Ignore audio errors
+        }
+    },
+    playStep() {
+        this.init();
+        if (!this.ctx) return;
+        let now = this.ctx.currentTime;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+    },
+    playLadder() {
+        this.init();
+        if (!this.ctx) return;
+        let now = this.ctx.currentTime;
+        let notes = [440, 554, 659, 880];
+        notes.forEach((freq, idx) => {
+            let osc = this.ctx.createOscillator();
+            let gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.12);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.12);
+        });
+    },
+    playSnake() {
+        this.init();
+        if (!this.ctx) return;
+        let now = this.ctx.currentTime;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(80, now + 0.35);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+    },
+    playCard() {
+        this.init();
+        if (!this.ctx) return;
+        let now = this.ctx.currentTime;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.setValueAtTime(880, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+    },
+    playWin() {
+        this.init();
+        if (!this.ctx) return;
+        let now = this.ctx.currentTime;
+        let notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            let osc = this.ctx.createOscillator();
+            let gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+            gain.gain.setValueAtTime(0.3, now + idx * 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.15 + 0.3);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.15);
+            osc.stop(now + idx * 0.15 + 0.3);
+        });
+    }
+};
+
+function updateDiceButtonState(state) {
+    let rollBtn = document.getElementById('btn-roll-dice');
+    if (!rollBtn) return;
+    
+    let currPlayer = state.players[state.turnIndex];
+    if ((currPlayer && currPlayer.isBot) || (state.status && state.status !== 'playing')) {
+        rollBtn.disabled = true;
+        rollBtn.style.opacity = '0.4';
+        rollBtn.style.cursor = 'not-allowed';
+    } else {
+        rollBtn.disabled = false;
+        rollBtn.style.opacity = '1';
+        rollBtn.style.cursor = 'pointer';
+    }
+}
+
+function playLocalTurn(isBotTurn = false) {
+    if (localGame.status !== 'playing' || localGame.isProcessingTurn) return;
+    let currPlayer = localGame.players[localGame.turnIndex];
+    if (currPlayer.isBot && !isBotTurn) return;
+
+    localGame.isProcessingTurn = true;
+    updateDiceButtonState(localGame);
+
+    try {
+        if (currPlayer.skipTurn) {
+            currPlayer.skipTurn = false;
+            let skipMsg = `${currPlayer.username} diskip turn-nya!`;
+            document.getElementById('game-status-text').innerText = skipMsg;
+            showToast(skipMsg);
+            localGame.turnIndex = (localGame.turnIndex + 1) % localGame.players.length;
+            localGame.isProcessingTurn = false;
+            updateScoreboard(localGame);
+            renderGame(localGame);
+            checkBotTurn();
+            return;
+        }
+
+        let dice = Math.floor(Math.random() * 6) + 1;
+        localGame.lastDice = dice;
+        let diceSpan = document.getElementById('dice-display').querySelector('span');
+        if (diceSpan) diceSpan.innerText = dice;
+
+        let targetPos = currPlayer.pos + dice;
+        if (targetPos > 100) {
+            let excess = targetPos - 100;
+            targetPos = 100 - excess;
+        }
+        
+        animateTokenMovement(currPlayer, targetPos, () => {
+            try {
+                let snakeHit = localGame.board.snakes.find(s => s.from === currPlayer.pos);
+                let ladderHit = localGame.board.ladders.find(l => l.from === currPlayer.pos);
+                let cardHit = localGame.board.cardTiles.includes(currPlayer.pos);
+
+                let msg = `${currPlayer.username} melempar dadu [${dice}] -> Petak ${targetPos}`;
+
+                if (snakeHit) {
+                    AudioFX.playSnake();
+                    animateTokenMovement(currPlayer, snakeHit.to, () => {
+                        msg += ` | 🐍 Kena Ular! Meluncur turun ke ${snakeHit.to}`;
+                        finishTurnCheck(currPlayer, msg);
+                    });
+                } else if (ladderHit) {
+                    AudioFX.playLadder();
+                    animateTokenMovement(currPlayer, ladderHit.to, () => {
+                        msg += ` | 🐒 Tangga Menari! Naik ke ${ladderHit.to}`;
+                        finishTurnCheck(currPlayer, msg);
+                    });
+                } else if (cardHit) {
+                    AudioFX.playCard();
+                    let isGreen = Math.random() < 0.5;
+                    let deck = isGreen ? GREEN_CARDS : RED_CARDS;
+                    let card = deck[Math.floor(Math.random() * deck.length)];
+                    
+                    msg += ` | 📜 Kartu [${isGreen ? 'HIJAU' : 'MERAH'}]: ${card.text}`;
+                    
+                    if (currPlayer.isBot) {
+                        card.action(currPlayer, dice, localGame);
+                        currPlayer.pos = Math.max(1, Math.min(100, currPlayer.pos));
+                        animateTokenMovement(currPlayer, currPlayer.pos, () => {
+                            finishTurnCheck(currPlayer, msg);
+                        });
+                    } else {
+                        showCardModal(isGreen ? "✨ Kartu Takdir Hijau" : "⚡ Kartu Takdir Merah", card.text, () => {
+                            card.action(currPlayer, dice, localGame);
+                            currPlayer.pos = Math.max(1, Math.min(100, currPlayer.pos));
+                            animateTokenMovement(currPlayer, currPlayer.pos, () => {
+                                finishTurnCheck(currPlayer, msg);
+                            });
+                        });
+                    }
+                } else {
+                    finishTurnCheck(currPlayer, msg);
+                }
+            } catch (err) {
+                console.error("Turn processing error:", err);
+                localGame.isProcessingTurn = false;
+                updateDiceButtonState(localGame);
+            }
+        });
+    } catch (e) {
+        console.error("Play turn error:", e);
+        localGame.isProcessingTurn = false;
+        isDiceRolling = false;
+        updateDiceButtonState(localGame);
+    }
 }
 
 function animateTokenMovement(player, destination, onComplete) {
@@ -422,6 +674,7 @@ function animateTokenMovement(player, destination, onComplete) {
         if (onComplete) onComplete();
         return;
     }
+    AudioFX.playStep();
     let step = player.pos < destination ? 1 : -1;
     let nextPos = player.pos + step;
     
@@ -430,14 +683,13 @@ function animateTokenMovement(player, destination, onComplete) {
     player.animProgress = 0;
     
     let startTime = performance.now();
-    let duration = 280; // Smooth step duration
+    let duration = 280;
 
     function stepAnim(now) {
         let elapsed = now - startTime;
         let progress = Math.min(1, elapsed / duration);
         
         player.animProgress = progress;
-        // Parabolic jump arc (height 28px)
         player.jumpOffset = Math.sin(progress * Math.PI) * 28;
         
         renderGame(localGame);
@@ -462,18 +714,37 @@ function animateTokenMovement(player, destination, onComplete) {
     requestAnimationFrame(stepAnim);
 }
 
+function showToast(msg) {
+    let toast = document.getElementById('floating-toast');
+    if (!toast) return;
+    toast.innerText = msg;
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2500);
+}
+
 function finishTurnCheck(currPlayer, msg) {
     document.getElementById('game-status-text').innerText = msg;
+    showToast(msg);
 
     if (currPlayer.pos === 100) {
+        if (localGame.timerInterval) clearInterval(localGame.timerInterval);
+        AudioFX.playWin();
         localGame.status = 'finished';
-        document.getElementById('gameover-title').innerText = "🎉 PEMENANG iOS RIMBA 🎉";
-        document.getElementById('gameover-msg').innerText = `${currPlayer.username} berhasil mencapai Finish Petak 100 dengan gemilang!`;
+        let totalSec = Math.floor((Date.now() - localGame.startTime) / 1000);
+        let mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
+        let secs = String(totalSec % 60).padStart(2, '0');
+
+        document.getElementById('gameover-title').innerText = "🎉 PEMENANG RIMBA 🎉";
+        document.getElementById('gameover-msg').innerText = `${currPlayer.username} berhasil mencapai Finish Petak 100 dalam waktu tercepat ${mins}:${secs}!`;
         document.getElementById('modal-gameover').style.display = 'flex';
         return;
     }
 
     localGame.turnIndex = (localGame.turnIndex + 1) % localGame.players.length;
+    localGame.isProcessingTurn = false;
+    updateScoreboard(localGame);
     renderGame(localGame);
     checkBotTurn();
 }
@@ -481,11 +752,9 @@ function finishTurnCheck(currPlayer, msg) {
 function checkBotTurn() {
     if (localGame && localGame.status === 'playing') {
         let currPlayer = localGame.players[localGame.turnIndex];
+        updateDiceButtonState(localGame);
         if (currPlayer.isBot) {
-            document.getElementById('game-status-text').innerText = `${currPlayer.username} sedang berpikir... 🤖`;
-            setTimeout(() => {
-                triggerDiceAnimation(playLocalTurn);
-            }, 2000); // 2 seconds thinking delay for bot
+            triggerDiceAnimation(() => playLocalTurn(true));
         }
     }
 }
@@ -496,11 +765,13 @@ socket.on('dice_rolled', (data) => {
     document.getElementById('game-status-text').innerText = data.eventMessage;
     renderGame(data.room);
     if (data.triggeredCard) {
-        showCardModal("✨ KARTU TAKDIR iOS", data.triggeredCard.text, () => {});
+        AudioFX.playCard();
+        showCardModal("✨ KARTU TAKDIR ✨", data.triggeredCard.text, () => {});
     }
 });
 
 socket.on('game_over', (data) => {
+    AudioFX.playWin();
     document.getElementById('gameover-title').innerText = "🎉 PERMAINAN SELESAI";
     document.getElementById('gameover-msg').innerText = data.message;
     document.getElementById('modal-gameover').style.display = 'flex';
@@ -532,44 +803,105 @@ function showCardModal(title, text, onClose) {
     });
 }
 
-// --- CANVAS BOARD RENDERER WITH DANCING SPRITES & iOS GLASS STYLE ---
+let isDiceRolling = false;
+
+// Roll Dice Button with Animation & Audio
+document.getElementById('btn-roll-dice').addEventListener('click', () => {
+    let currPlayer = localGame && localGame.players ? localGame.players[localGame.turnIndex] : null;
+    if ((currPlayer && currPlayer.isBot) || (localGame && localGame.isProcessingTurn) || isDiceRolling) return;
+
+    triggerDiceAnimation(() => {
+        if (gameMode === 'online') {
+            socket.emit('roll_dice', { roomCode: onlineRoomCode });
+        } else {
+            playLocalTurn();
+        }
+    });
+});
+
+function triggerDiceAnimation(callback) {
+    if (isDiceRolling) return;
+    isDiceRolling = true;
+    AudioFX.playDice();
+    let diceEl = document.getElementById('dice-display');
+    diceEl.classList.add('rolling');
+    let count = 0;
+    let interval = setInterval(() => {
+        diceEl.querySelector('span').innerText = Math.floor(Math.random() * 6) + 1;
+        count++;
+        if (count > 8) {
+            clearInterval(interval);
+            diceEl.classList.remove('rolling');
+            isDiceRolling = false;
+            if (callback) callback();
+        }
+    }, 50);
+}
+
+// --- CANVAS BOARD RENDERER WITH 3D GLASS STYLE & CHESS PIECES ---
 const canvas = document.getElementById('boardCanvas');
 const ctx = canvas.getContext('2d');
 const tileSize = 55;
 
 let animationFrameTick = 0;
 
+function updateScoreboard(state) {
+    let sbHtml = '';
+    state.players.forEach((p, idx) => {
+        let isTurn = state.players[state.turnIndex].id === p.id;
+        sbHtml += `<div class="player-score-card ${isTurn ? 'active-turn' : ''}">
+            <span>${AVATAR_SYMBOLS[p.avatar]} <strong>${p.username}</strong></span>
+            <span>Petak: <strong>${p.pos}</strong></span>
+        </div>`;
+    });
+    let sbEl = document.getElementById('players-score-board');
+    if (sbEl) sbEl.innerHTML = sbHtml;
+}
+
 function renderGame(state) {
     animationFrameTick += 0.05;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    updateDiceButtonState(state);
 
-    // Draw 10x10 iOS Glass Grid
+    // Draw 10x10 iOS 3D Glass Grid
     for (let r = 0; r < 10; r++) {
         for (let c = 0; c < 10; c++) {
             let tileNum = getTileNumber(r, c);
             let x = c * tileSize + 25;
             let y = r * tileSize + 25;
 
-            // iOS translucent tiles
-            ctx.fillStyle = (tileNum % 2 === 0) ? 'rgba(255, 255, 255, 0.7)' : 'rgba(240, 244, 255, 0.9)';
+            let grad = ctx.createLinearGradient(x, y, x, y + tileSize);
+            if (tileNum % 2 === 0) {
+                grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+                grad.addColorStop(1, 'rgba(230, 238, 255, 0.9)');
+            } else {
+                grad.addColorStop(0, 'rgba(240, 245, 255, 0.98)');
+                grad.addColorStop(1, 'rgba(215, 228, 255, 0.92)');
+            }
+            ctx.fillStyle = grad;
             ctx.fillRect(x, y, tileSize, tileSize);
-            ctx.strokeStyle = 'rgba(0, 122, 255, 0.15)';
-            ctx.strokeRect(x, y, tileSize, tileSize);
 
-            ctx.fillStyle = '#8e8e93';
-            ctx.font = '11px -apple-system, sans-serif';
-            ctx.fillText(tileNum, x + 4, y + 14);
+            // 3D Bevel border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x, y, tileSize, tileSize);
+            ctx.strokeStyle = 'rgba(0, 122, 255, 0.18)';
+            ctx.strokeRect(x + 1, y + 1, tileSize - 2, tileSize - 2);
+
+            ctx.fillStyle = '#6e6e73';
+            ctx.font = 'bold 11px -apple-system, sans-serif';
+            ctx.fillText(tileNum, x + 5, y + 15);
 
             // Check card tile
             if (state.board.cardTiles && state.board.cardTiles.includes(tileNum)) {
                 ctx.fillStyle = '#af52de';
                 ctx.font = '14px sans-serif';
-                ctx.fillText('✨', x + 18, y + 35);
+                ctx.fillText('✨', x + tileSize / 2 - 7, y + tileSize / 2 + 5);
             }
         }
     }
 
-    // Draw Extended Ladders & Realistic Snakes (Real Snakes & Ladders style)
+    // Draw Ladders & Red Snakes
     if (state.board.ladders) {
         state.board.ladders.forEach(l => {
             drawExtendedLadder(l.from, l.to);
@@ -581,7 +913,7 @@ function renderGame(state) {
         });
     }
 
-    // Draw Players Tokens with smooth parabolic jump arc between tiles
+    // Draw Original Animal Tokens (Enlarged, not circular) centered in the box
     state.players.forEach((p, idx) => {
         let coords;
         let bounceOffset = Math.sin(animationFrameTick * 3 + idx) * 3;
@@ -597,28 +929,18 @@ function renderGame(state) {
             coords = getTileCoords(p.pos);
         }
         
-        ctx.fillStyle = getIOSColor(idx);
-        ctx.beginPath();
-        ctx.arc(coords.x + 15 + (idx * 6), coords.y + 32 + bounceOffset - jumpOffset, 13, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        let offsetX = (idx - (state.players.length - 1) / 2) * 12;
+        let posX = coords.x + offsetX;
+        let posY = coords.y + bounceOffset - jumpOffset;
 
-        ctx.font = '15px sans-serif';
-        ctx.fillText(AVATAR_SYMBOLS[p.avatar] || '🦁', coords.x + 6 + (idx * 6), coords.y + 38 + bounceOffset - jumpOffset);
+        // Original Animal Symbol (Enlarged to 32px filling the box, no circular pedestal)
+        ctx.font = '32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(AVATAR_SYMBOLS[p.avatar] || '🦁', posX, posY);
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'start';
     });
-
-    // Update Sidebar Scoreboard
-    let sbHtml = '';
-    state.players.forEach((p, idx) => {
-        let isTurn = state.players[state.turnIndex].id === p.id;
-        sbHtml += `<div class="player-score-card ${isTurn ? 'active-turn' : ''}">
-            <span>${AVATAR_SYMBOLS[p.avatar]} <strong>${p.username}</strong></span>
-            <span>Petak: <strong>${p.pos}</strong></span>
-        </div>`;
-    });
-    document.getElementById('players-score-board').innerHTML = sbHtml;
 }
 
 function getTileNumber(r, c) {
@@ -637,26 +959,28 @@ function getTileCoords(num) {
     if ((9 - r) % 2 !== 0) {
         c = 9 - c;
     }
-    return { x: c * tileSize + 10, y: r * tileSize + 10 };
+    let x = c * tileSize + 25 + tileSize / 2;
+    let y = r * tileSize + 25 + tileSize / 2;
+    return { x, y };
 }
 
 function drawExtendedLadder(from, to) {
     let p1 = getTileCoords(from);
     let p2 = getTileCoords(to);
-    let cx1 = p1.x + tileSize / 2;
-    let cy1 = p1.y + tileSize / 2;
-    let cx2 = p2.x + tileSize / 2;
-    let cy2 = p2.y + tileSize / 2;
+    let cx1 = p1.x;
+    let cy1 = p1.y;
+    let cx2 = p2.x;
+    let cy2 = p2.y;
 
     let dx = cx2 - cx1;
     let dy = cy2 - cy1;
     let len = Math.sqrt(dx * dx + dy * dy);
-    let nx = -dy / len * 7;
-    let ny = dx / len * 7;
+    let nx = -dy / len * 8;
+    let ny = dx / len * 8;
 
-    // Ladder side rails (Wood/Bronze color)
-    ctx.strokeStyle = '#8B4513';
-    ctx.lineWidth = 4;
+    // Bright 3D Ladder Side Rails (Gold / Orange)
+    ctx.strokeStyle = '#d35400';
+    ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.moveTo(cx1 + nx, cy1 + ny);
     ctx.lineTo(cx2 + nx, cy2 + ny);
@@ -664,9 +988,18 @@ function drawExtendedLadder(from, to) {
     ctx.lineTo(cx2 - nx, cy2 - ny);
     ctx.stroke();
 
-    // Ladder rungs (anak tangga)
+    ctx.strokeStyle = '#f1c40f';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx1 + nx, cy1 + ny);
+    ctx.lineTo(cx2 + nx, cy2 + ny);
+    ctx.moveTo(cx1 - nx, cy1 - ny);
+    ctx.lineTo(cx2 - nx, cy2 - ny);
+    ctx.stroke();
+
+    // Bright Ladder Rungs (Cyan)
     let numRungs = Math.max(4, Math.floor(len / 18));
-    ctx.strokeStyle = '#A0522D';
+    ctx.strokeStyle = '#00d2ff';
     ctx.lineWidth = 3;
     for (let i = 1; i < numRungs; i++) {
         let t = i / numRungs;
@@ -680,45 +1013,45 @@ function drawExtendedLadder(from, to) {
         ctx.lineTo(rx2, ry2);
         ctx.stroke();
     }
-
-    // Ladder emoji at base
-    ctx.font = '18px sans-serif';
-    ctx.fillText('🪜', cx1 - 9, cy1 + 6);
 }
 
 function drawSnake(from, to) {
-    let p1 = getTileCoords(from); // Head (higher number)
-    let p2 = getTileCoords(to);   // Tail (lower number)
-    let cx1 = p1.x + tileSize / 2;
-    let cy1 = p1.y + tileSize / 2;
-    let cx2 = p2.x + tileSize / 2;
-    let cy2 = p2.y + tileSize / 2;
+    let p1 = getTileCoords(from);
+    let p2 = getTileCoords(to);
+    let cx1 = p1.x;
+    let cy1 = p1.y;
+    let cx2 = p2.x;
+    let cy2 = p2.y;
 
     let midX = (cx1 + cx2) / 2 + 35 * Math.sin(animationFrameTick);
     let midY = (cy1 + cy2) / 2 - 25;
 
-    // Snake body curve (Green/Red serpentine pattern)
-    ctx.strokeStyle = '#27ae60';
-    ctx.lineWidth = 10;
+    // Red Snake Body with 3D Shadow
+    ctx.strokeStyle = '#900c3f';
+    ctx.lineWidth = 12;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(cx1, cy1);
     ctx.quadraticCurveTo(midX, midY, cx2, cy2);
     ctx.stroke();
 
-    // Snake belly stripe / pattern
+    ctx.strokeStyle = '#ff2d55';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx1, cy1);
+    ctx.quadraticCurveTo(midX, midY, cx2, cy2);
+    ctx.stroke();
+
+    // Snake Belly Stripe Pattern
     ctx.strokeStyle = '#f1c40f';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.setLineDash([4, 6]);
     ctx.beginPath();
     ctx.moveTo(cx1, cy1);
     ctx.quadraticCurveTo(midX, midY, cx2, cy2);
     ctx.stroke();
     ctx.setLineDash([]);
-
-    // Snake Head at `from` (Head position)
-    ctx.font = '22px sans-serif';
-    ctx.fillText('🐍', cx1 - 11, cy1 + 8);
 }
 
 function getIOSColor(idx) {

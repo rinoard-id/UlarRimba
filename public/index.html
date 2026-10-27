@@ -23,14 +23,14 @@
                 <div class="form-group">
                     <label>Pilih Avatar Karakter:</label>
                     <div class="avatar-grid" id="avatar-selector">
-                        <div class="avatar-option selected" data-id="1">🦁<br>Singa</div>
-                        <div class="avatar-option" data-id="2">🐯<br>Harimau</div>
-                        <div class="avatar-option" data-id="3">🦅<br>Elang</div>
-                        <div class="avatar-option" data-id="4">🐘<br>Gajah</div>
-                        <div class="avatar-option" data-id="5">🐺<br>Serigala</div>
-                        <div class="avatar-option" data-id="6">🦊<br>Rubah</div>
-                        <div class="avatar-option" data-id="7">🐼<br>Panda</div>
-                        <div class="avatar-option" data-id="8">🐲<br>Naga</div>
+                        <div class="avatar-option selected" data-id="1"><span class="av-emoji">🦁</span><span class="av-name">Singa</span></div>
+                        <div class="avatar-option" data-id="2"><span class="av-emoji">🐯</span><span class="av-name">Harimau</span></div>
+                        <div class="avatar-option" data-id="3"><span class="av-emoji">🦅</span><span class="av-name">Elang</span></div>
+                        <div class="avatar-option" data-id="4"><span class="av-emoji">🐘</span><span class="av-name">Gajah</span></div>
+                        <div class="avatar-option" data-id="5"><span class="av-emoji">🐺</span><span class="av-name">Serigala</span></div>
+                        <div class="avatar-option" data-id="6"><span class="av-emoji">🦊</span><span class="av-name">Rubah</span></div>
+                        <div class="avatar-option" data-id="7"><span class="av-emoji">🐼</span><span class="av-name">Panda</span></div>
+                        <div class="avatar-option" data-id="8"><span class="av-emoji">🐲</span><span class="av-name">Naga</span></div>
                     </div>
                 </div>
 
@@ -53,6 +53,7 @@
                     <button class="btn btn-mode" data-mode="local">👥 1-Device Local Co-op</button>
                     <button class="btn btn-mode" data-mode="online">🌐 Room Multiplayer Online</button>
                 </div>
+                <button class="btn btn-back" id="btn-menu-back-login" style="margin-top: 15px;">← Kembali ke Login</button>
             </div>
         </section>
 
@@ -78,27 +79,44 @@
 
         <!-- SCREEN 4: GAME ARENA -->
         <section id="screen-game" class="screen">
-            <div class="game-container">
-                <div class="game-sidebar">
-                    <div class="jungle-box panel">
-                        <h3>Status Rimba</h3>
-                        <div id="game-status-text" class="status-msg">Giliran Pemain 1</div>
-                        <div id="players-score-board"></div>
-                        
-                        <div class="dice-box">
-                            <div id="dice-display" class="dice">🎲 <span>-</span></div>
-                            <button class="btn btn-primary" id="btn-roll-dice">LEMPAR DADU</button>
-                        </div>
-
-                        <button class="btn btn-back" id="btn-quit-game" style="margin-top: 15px;">Menyerah / Keluar</button>
-                    </div>
-                </div>
-
+            <div class="game-unified-container">
+                <button class="btn-board-close" id="btn-quit-game" title="Keluar">✕</button>
                 <div class="game-board-area">
                     <canvas id="boardCanvas" width="600" height="600"></canvas>
                 </div>
+                <div class="game-action-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div id="game-status-text" class="status-msg" style="flex-grow: 1; margin: 0; text-align: left;">Giliran Pemain 1</div>
+                        <span id="game-timer" style="font-size: 11px; font-weight: bold; color: var(--accent-purple); background: rgba(175,82,222,0.1); padding: 4px 8px; border-radius: 6px;">⏱️ 00:00</span>
+                    </div>
+                    <div id="players-score-board"></div>
+                    <div class="dice-controls-row">
+                        <div id="dice-display" class="dice">🎲 <span>-</span></div>
+                        <button class="btn btn-primary" id="btn-roll-dice">LEMPAR DADU</button>
+                    </div>
+                </div>
             </div>
         </section>
+
+        <!-- MODAL: LOCAL CO-OP SETUP -->
+        <div id="modal-local-setup" class="modal">
+            <div class="modal-content jungle-box">
+                <h3>👥 Pengaturan Local Co-op</h3>
+                <div class="form-group">
+                    <label>Jumlah Pemain (2 - 4):</label>
+                    <select id="select-player-count" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.1); background:#fff; font-size:14px; margin-bottom: 12px;">
+                        <option value="2">2 Pemain</option>
+                        <option value="3">3 Pemain</option>
+                        <option value="4">4 Pemain</option>
+                    </select>
+                </div>
+                <div id="local-players-inputs" style="margin-bottom: 15px; text-align: left;">
+                    <!-- Dynamic inputs generated by JS -->
+                </div>
+                <button class="btn btn-primary" id="btn-start-local-game">Mulai Permainan</button>
+                <button class="btn btn-secondary" id="btn-close-local-setup">Batal</button>
+            </div>
+        </div>
 
         <!-- MODAL: FATE CARD -->
         <div id="modal-card" class="modal">
@@ -127,6 +145,9 @@
                 <button class="btn btn-primary" id="btn-back-to-menu">Kembali ke Menu</button>
             </div>
         </div>
+
+        <!-- FLOATING TOAST NOTIFICATION -->
+        <div id="floating-toast" class="floating-toast"></div>
     </div>
 
     <script src="script.js"></script>

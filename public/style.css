@@ -29,13 +29,12 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow-x: hidden;
-    padding: 20px;
+    padding: 15px;
 }
 
 #app {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1300px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -44,6 +43,8 @@ body {
 .screen {
     display: none;
     width: 100%;
+    justify-content: center;
+    align-items: center;
     animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -65,7 +66,7 @@ body {
     -webkit-backdrop-filter: blur(25px);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
-    padding: 36px;
+    padding: 32px;
     box-shadow: var(--glass-shadow);
     width: 100%;
     max-width: 480px;
@@ -78,10 +79,10 @@ body {
 }
 
 h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     letter-spacing: -0.5px;
     background: linear-gradient(135deg, #007aff, #af52de);
     -webkit-background-clip: text;
@@ -91,38 +92,38 @@ h1 {
 h2, h3 {
     color: var(--text-primary);
     font-weight: 600;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     letter-spacing: -0.3px;
 }
 
 p {
     color: var(--text-secondary);
-    font-size: 15px;
-    margin-bottom: 24px;
+    font-size: 14px;
+    margin-bottom: 20px;
     line-height: 1.5;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     text-align: left;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     color: var(--text-primary);
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 input[type="text"] {
     width: 100%;
-    padding: 14px 16px;
-    border-radius: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
     border: 1px solid rgba(0, 0, 0, 0.1);
     background: rgba(255, 255, 255, 0.6);
     color: var(--text-primary);
-    font-size: 16px;
+    font-size: 15px;
     outline: none;
     transition: all 0.25s ease;
     box-shadow: 0 2px 6px rgba(0,0,0,0.02) inset;
@@ -137,44 +138,59 @@ input[type="text"]:focus {
 .avatar-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
 .avatar-option {
     background: rgba(255, 255, 255, 0.5);
     border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 16px;
-    padding: 14px 8px;
+    border-radius: 14px;
+    padding: 8px 4px;
     cursor: pointer;
-    font-size: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.avatar-option .av-emoji {
+    font-size: 30px;
+    line-height: 1.2;
+}
+
+.avatar-option .av-name {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    font-weight: 500;
+}
+
 .avatar-option:hover {
-    transform: translateY(-4px) scale(1.05);
+    transform: translateY(-2px) scale(1.05);
     background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.08);
 }
 
 .avatar-option.selected {
     border-color: var(--accent-blue);
     background: linear-gradient(135deg, rgba(0,122,255,0.15), rgba(175,82,222,0.15));
-    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
-    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.25);
+    transform: scale(1.05);
 }
 
 /* iOS Buttons */
 .btn {
     width: 100%;
-    padding: 14px 20px;
-    border-radius: 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
     border: none;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    margin-top: 12px;
+    margin-top: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
@@ -185,12 +201,12 @@ input[type="text"]:focus {
 .btn-primary {
     background: linear-gradient(135deg, #007aff, #5856d6);
     color: #fff;
-    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
 }
 
 .btn-primary:hover {
     background: linear-gradient(135deg, #0062cc, #4a48be);
-    box-shadow: 0 12px 25px rgba(0, 122, 255, 0.4);
+    box-shadow: 0 10px 20px rgba(0, 122, 255, 0.4);
     transform: translateY(-2px);
 }
 
@@ -210,14 +226,14 @@ input[type="text"]:focus {
     color: var(--text-primary);
     border: 1px solid rgba(0, 0, 0, 0.08);
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     text-align: left;
-    padding: 16px 20px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 16px;
-    border-radius: 16px;
+    gap: 10px;
+    font-size: 14px;
+    border-radius: 12px;
     transition: all 0.3s ease;
 }
 
@@ -225,7 +241,7 @@ input[type="text"]:focus {
     background: #fff;
     border-color: var(--accent-blue);
     box-shadow: 0 8px 20px rgba(0, 122, 255, 0.15);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
 }
 
 .btn-back {
@@ -241,12 +257,12 @@ input[type="text"]:focus {
 .profile-badge {
     background: rgba(255, 255, 255, 0.5);
     border: 1px solid rgba(0, 0, 0, 0.06);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 24px;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 14px;
     display: flex;
     justify-content: space-around;
-    font-size: 15px;
+    font-size: 13px;
 }
 
 .menu-buttons {
@@ -254,109 +270,344 @@ input[type="text"]:focus {
     flex-direction: column;
 }
 
-/* GAME ARENA iOS LAYOUT */
-.game-container {
+/* GAME ARENA UNIFIED 1-CONTAINER LAYOUT (Compact, No Clipping) */
+.game-unified-container {
+    background: var(--glass-bg);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 12px 16px;
+    box-shadow: var(--glass-shadow);
     display: flex;
-    gap: 24px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    max-width: 1150px;
-    align-items: flex-start;
+    max-width: 460px;
+    gap: 8px;
+    position: relative;
+    margin: auto;
 }
 
-.game-sidebar {
-    width: 380px;
+.btn-board-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.06);
+    border: none;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: all 0.2s ease;
 }
 
-.game-sidebar .panel {
-    max-width: 100%;
-    text-align: left;
+.btn-board-close:hover {
+    background: rgba(0, 0, 0, 0.12);
+    color: var(--text-primary);
+}
+
+.game-board-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+canvas {
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    width: 100%;
+    height: auto;
+    max-width: 400px;
+    max-height: 400px;
+    aspect-ratio: 1 / 1;
+}
+
+.game-action-panel {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .status-msg {
     background: rgba(0, 122, 255, 0.08);
-    padding: 14px 16px;
-    border-radius: 12px;
-    border-left: 4px solid var(--accent-blue);
-    margin-bottom: 20px;
-    font-size: 14px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border-left: 3px solid var(--accent-blue);
+    font-size: 11px;
     font-weight: 500;
     color: var(--text-primary);
-    animation: pulseGlow 2s infinite;
+    text-align: center;
+    margin: 0;
 }
 
-@keyframes pulseGlow {
-    0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.2); }
-    70% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+#players-score-board {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    width: 100%;
 }
 
 .player-score-card {
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.7);
     border: 1px solid rgba(0, 0, 0, 0.06);
-    border-radius: 14px;
-    padding: 12px 16px;
-    margin-bottom: 10px;
+    border-radius: 8px;
+    padding: 5px 8px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    flex: 1;
+    justify-content: space-between;
     transition: all 0.3s ease;
 }
 
 .player-score-card.active-turn {
-    background: linear-gradient(135deg, rgba(0, 122, 255, 0.15), rgba(175, 82, 222, 0.15));
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.2), rgba(175, 82, 222, 0.2));
     border-color: var(--accent-blue);
-    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
     transform: scale(1.02);
 }
 
-.dice-box {
-    text-align: center;
-    margin-top: 24px;
-    background: rgba(255, 255, 255, 0.5);
-    padding: 20px;
-    border-radius: 18px;
-    border: 1px solid rgba(0,0,0,0.06);
+.dice-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.05);
+    justify-content: space-between;
 }
 
 .dice {
-    font-size: 32px;
-    margin-bottom: 12px;
+    font-size: 18px;
     font-weight: bold;
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 4px;
     color: var(--accent-blue);
+    margin: 0;
 }
 
 .dice.rolling {
     animation: diceShake 0.4s ease infinite;
 }
 
-@keyframes diceShake {
-    0% { transform: rotate(0deg) scale(1); }
-    25% { transform: rotate(-15deg) scale(1.1); }
-    50% { transform: rotate(15deg) scale(0.95); }
-    75% { transform: rotate(-10deg) scale(1.05); }
-    100% { transform: rotate(0deg) scale(1); }
+.dice-controls-row .btn-primary {
+    margin: 0;
+    padding: 5px 12px;
+    font-size: 11px;
+    width: auto;
+    flex-grow: 1;
 }
 
-.game-board-area {
-    background: var(--glass-bg);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid var(--glass-border);
-    border-radius: 28px;
-    padding: 20px;
-    box-shadow: var(--glass-shadow);
+.game-action-panel {
+    width: 100%;
     display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.status-msg {
+    background: rgba(0, 122, 255, 0.08);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-blue);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0;
+}
+
+#players-score-board {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    width: 100%;
+}
+
+.player-score-card {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 10px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    flex: 1;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+}
+
+.player-score-card.active-turn {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.2), rgba(175, 82, 222, 0.2));
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+    transform: scale(1.02);
+}
+
+.dice-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.05);
+    justify-content: space-between;
+}
+
+.dice {
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--accent-blue);
+    margin: 0;
+}
+
+.dice.rolling {
+    animation: diceShake 0.4s ease infinite;
+}
+
+.dice-controls-row .btn-primary {
+    margin: 0;
+    padding: 6px 14px;
+    font-size: 12px;
+    width: auto;
+    flex-grow: 1;
+}
+
+.game-action-panel .btn-back {
+    margin: 0;
+    padding: 4px 10px;
+    font-size: 10px;
+    background: rgba(0, 0, 0, 0.04);
+}
+
+/* FLOATING TOAST NOTIFICATION (Kanan Atas) */
+.floating-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 122, 255, 0.92);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0, 122, 255, 0.35);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+}
+
+.floating-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (max-width: 900px) {
+    .game-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        align-items: center;
+    }
+    .game-board-area {
+        padding: 8px;
+    }
+    canvas {
+        max-width: 320px;
+        max-height: 320px;
+    }
+    .game-sidebar {
+        width: 300px;
+    }
+    .game-sidebar .panel {
+        padding: 12px;
+    }
+}
+
+/* iOS Modals */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     justify-content: center;
     align-items: center;
+    z-index: 1000;
+    animation: fadeInModal 0.3s ease;
 }
 
-canvas {
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    animation: scaleIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.card-icon {
+    font-size: 56px;
+    margin: 16px 0;
+    animation: floatIcon 2s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.players-list {
+    margin: 16px 0;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.highlight {
+    color: var(--accent-blue);
+    font-weight: bold;
 }
 
 /* iOS Modals */
